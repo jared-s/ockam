@@ -4,7 +4,7 @@ defmodule Ockam.Router.Tests.Printer do
   use Ockam.Worker
 
   @impl true
-  def handle_message(message, state) do
+  def handle_message(_message, state) do
     {:ok, state}
   end
 end
