@@ -77,13 +77,23 @@ if Code.ensure_loaded?(:ranch) do
       with {:ok, destination, message} <- pick_destination_and_set_onward_route(message, state.address),
            {:ok, message} <- set_return_route(message, state.address),
            {:ok, encoded_message} <- Wire.encode(@wire_encoder_decoder, message),
-           :ok <- send_over_tcp(encoded_message, destination) do
+           {:ok, encoded_message_with_length_prepended} <- prepend_varint_length(encoded_message),
+           :ok <- send_over_tcp(encoded_message_with_length_prepended, destination) do
         :ok
+      end
+    end
+
+    defp prepend_varint_length(message) do
+      bytesize = IO.iodata_length(message)
+      case Ockam.Wire.Binary.VarInt.encode(bytesize) do
+        {:error, reason} -> {:error, reason}
+        varint_length -> {:ok, [varint_length, message]}
       end
     end
 
     defp send_over_tcp(_message,address) do
       IO.inspect(address, label: "send_over_tcp")
+      :ok
     end
 
 
@@ -141,6 +151,15 @@ if Code.ensure_loaded?(:ranch) do
     end
 
     def handle_info({:tcp, socket, data}, %{socket: socket, transport: _transport} = state) do
+      # this will repeatedly try to decode the length even if the decoding succeeds.
+      # TODO: we should probably only decode the length once
+      with {bytesize, rest} <- Ockam.Wire.Binary.VarInt.decode(data),
+          {:ok, _data} <- check_length(data, bytesize) do
+          send_to_router(rest)
+        else
+            {:error, %Ockam.Wire.DecodeError{}} -> enqueue_data(data)
+            :not_enough_data -> enqueue_data(data)
+        end
       IO.puts("#{inspect(data)}")
       # @TODO: do something other than echo
       # transport.send(socket, data)
@@ -151,6 +170,21 @@ if Code.ensure_loaded?(:ranch) do
       IO.puts("Closing")
       transport.close(socket)
       {:stop, :normal, state}
+    end
+
+    defp check_length(data, size) do
+      case IO.iodata_length(data) == size do
+        true -> :ok
+        false -> :not_enough_data
+      end
+    end
+
+    defp enqueue_data(_data) do
+      # TODO: do this
+    end
+
+    defp send_to_router(_message) do
+      # TODO: do this
     end
   end
 end
