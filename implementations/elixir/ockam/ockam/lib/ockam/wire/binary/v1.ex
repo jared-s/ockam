@@ -96,5 +96,5 @@ defmodule Ockam.Wire.Binary.V1 do
   @spec format_error(error :: EncodeError.t() | DecodeError.t()) ::
           formatted_error_message :: String.t()
 
-  def format_error(error), do: "Unexpected error: #{inspect(error)}"
+  def format_error(error), do: "Unexpected error: #{inspect(error, as_binary: true)}"
 end
