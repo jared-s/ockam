@@ -93,6 +93,7 @@ if Code.ensure_loaded?(:ranch) do
 
     defp send_over_tcp(_message,address) do
       IO.inspect(address, label: "send_over_tcp")
+      # send(...)
       :ok
     end
 
@@ -139,38 +140,71 @@ if Code.ensure_loaded?(:ranch) do
   defmodule Ockam.Transport.TCP.Listener.Handler do
     @moduledoc false
 
-    def start_link(ref, socket, transport, _opts) do
-      pid = :proc_lib.spawn_link(__MODULE__, :init, [ref, socket, transport])
+    use GenServer
+
+    def start_link(ref, transport, opts) do
+      pid = :proc_lib.spawn_link(__MODULE__, :init, [[ref, transport, opts]])
       {:ok, pid}
     end
 
-    def init(ref, socket, transport) do
-      {:ok, _} = :ranch.handshake(ref)
-      :ok = transport.setopts(socket, [{:active, true}, {:nodelay, true}, {:reuseaddr, true}])
+
+    @impl true
+    def init([ref, transport, opts]) do
+      {:ok, socket} = :ranch.handshake(ref, opts)
+      :ok = transport.setopts(socket, [{:active, true}])
       :gen_server.enter_loop(__MODULE__, [], %{socket: socket, transport: transport})
     end
 
-    def handle_info({:tcp, socket, data}, %{socket: socket, transport: _transport} = state) do
+    @impl true
+    def handle_info({:tcp, socket, data}, %{socket: socket, transport: transport} = state) do
       # this will repeatedly try to decode the length even if the decoding succeeds.
       # TODO: we should probably only decode the length once
       with {bytesize, rest} <- Ockam.Wire.Binary.VarInt.decode(data),
           {:ok, _data} <- check_length(data, bytesize) do
-          send_to_router(rest)
+            send_to_router(rest)
         else
             {:error, %Ockam.Wire.DecodeError{}} -> enqueue_data(data)
             :not_enough_data -> enqueue_data(data)
         end
-      IO.puts("#{inspect(data)}")
-      # @TODO: do something other than echo
-      # transport.send(socket, data)
+      # This echoes back to the client as a test. We should not be doing that.
+      transport.send(socket, data)
       {:noreply, state}
     end
 
     def handle_info({:tcp_closed, socket}, %{socket: socket, transport: transport} = state) do
-      IO.puts("Closing")
       transport.close(socket)
       {:stop, :normal, state}
     end
+
+    @impl true
+    def handle_call({:send, data}, _from, %{socket: socket, transport: transport} = state) do
+      {:reply, transport.send(socket, data), state}
+    end
+
+    def handle_call(:peername, _from, %{socket: socket} = state) do
+      {ip, port} = :inet.peername(socket)
+      {:reply, {ip, port, self()} , state}
+    end
+
+    def send(ref, {ip, port}, data) do
+      # TODO: this needs to do something other than
+      # just look up by source IP and source port.
+      peernames = peernames(ref)
+      {_ip, _port, pid} = Enum.find(peernames, fn {peer_ip, peer_port, _pid} ->
+        peer_ip == ip and peer_port == port
+      end)
+      GenServer.call(pid, {:send, data})
+    end
+
+    def peernames(ref) do
+      connections = :ranch.procs(ref, :connections)
+      Enum.map(connections, fn(conn) ->
+        {:ok, {ip, port, pid}} = GenServer.call(conn, :peername)
+        {ip, port, pid}
+      end)
+    end
+
+
 
     defp check_length(data, size) do
       case IO.iodata_length(data) == size do
