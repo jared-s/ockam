@@ -91,9 +91,9 @@ if Code.ensure_loaded?(:ranch) do
       end
     end
 
-    defp send_over_tcp(_message,address) do
-      IO.inspect(address, label: "send_over_tcp")
-      # send(...)
+    defp send_over_tcp(message, %{ip: ip, port: port}) do
+      {:ok, pid} = Ockam.Transport.TCP.Client.start_link(%{ip: ip, port: port})
+      Ockam.Transport.TCP.Client.send(pid, message)
       :ok
     end
 
