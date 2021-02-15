@@ -74,11 +74,12 @@ defmodule Ockam.Hub.MixProject do
   defp aliases do
     [
       docs: "docs --output _build/docs --formatter html",
-      "test.cover": "test --no-start --cover",
+      run: "run --no-halt",
       "lint.format": "format --check-formatted",
       "lint.credo": "credo --strict",
       "lint.dialyzer": "dialyzer --format dialyxir",
-      lint: ["lint.format", "lint.credo"]
+      lint: ["lint.format", "lint.credo"],
+      "test.cover": "test --no-start --cover"
     ]
   end
 end
