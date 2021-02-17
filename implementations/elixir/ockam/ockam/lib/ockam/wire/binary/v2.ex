@@ -11,7 +11,7 @@ defmodule Ockam.Wire.Binary.V2 do
   require DecodeError
   require EncodeError
 
-  @version 2
+  @version 1
 
   # TODO: I hate bare_spec/1 thing but let's make it work first
   # because I don't want to break V1 or spend a bunch of time
