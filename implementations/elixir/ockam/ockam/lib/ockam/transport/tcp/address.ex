@@ -18,16 +18,19 @@ defmodule Ockam.Transport.TCPAddress do
               ip: {byte, byte, byte, byte} | {byte, byte, byte, byte, byte, byte, byte, byte},
               port: char
             }
+
+  def deserialize(%{type: @tcp, value: value}), do: deserialize(value)
+
   def deserialize(value) when is_list(value), do: deserialize(IO.iodata_to_binary(value))
 
   def deserialize(
-        <<@tcp::8, 7::8, @ipv4::8, a::8, b::8, c::8, d::8, port::unsigned-little-integer-16>>
+        <<@ipv4::8, a::8, b::8, c::8, d::8, port::unsigned-little-integer-16>>
       ) do
     %TCPAddress{ip: {a, b, c, d}, port: port}
   end
 
   def deserialize(
-        <<@tcp::8, 17::8, @ipv6::8, a::8, b::8, c::8, d::8, e::8, f::8, g::8, h::8,
+        <<@ipv6::8, a::8, b::8, c::8, d::8, e::8, f::8, g::8, h::8,
           port::unsigned-little-integer-16>>
       ) do
     %TCPAddress{ip: {a, b, c, d, e, f, g, h}, port: port}

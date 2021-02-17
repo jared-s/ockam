@@ -43,13 +43,9 @@ defmodule Ockam.Wire.Binary.V2 do
     payload = Message.payload(message)
 
     with {:ok, encoded_onward_route} <- Route.encode(onward_route),
-         {:ok, encoded_return_route} <- Route.encode(return_route) do
-      :bare.encode(%{
-        version: @version,
-        onward_route: encoded_onward_route,
-        return_route: encoded_return_route,
-        payload: payload
-        }, bare_spec(:message))
+         {:ok, encoded_return_route} <- Route.encode(return_route),
+         encoded <- :bare.encode(%{version: @version, onward_route: encoded_onward_route, return_route: encoded_return_route, payload: payload}, bare_spec(:message)) do
+          {:ok, encoded}
     end
   end
 

@@ -45,12 +45,13 @@ defmodule Ockam.Router.Tests do
 
       assert_receive {:trace, ^printer, :receive, result}
       assert result == %{
-               onward_route: [{0, <<0, 7, 112, 114, 105, 110, 116, 101, 114>>}],
-               payload: "\0\x05hello",
-               return_route: [
-                 {2, "\x02\a\0\d\0\0\x01\xB8\v"},
-               ]
-             }
+          version: 2,
+          onward_route: ["printer"],
+          payload: "hello",
+          return_route: [
+            %Ockam.Transport.UDPAddress{ip: {127, 0, 0, 1}, port: 3000}
+          ]
+        }
     end
 
     test "Simple TCP Test", %{printer_pid: printer} do
@@ -74,8 +75,9 @@ defmodule Ockam.Router.Tests do
 
       assert_receive {:trace, ^printer, :receive, result}
       assert result == %{
-               onward_route: [{0, <<0, 7, 112, 114, 105, 110, 116, 101, 114>>}],
-               payload: "\0\x05hello",
+               version: 2,
+               onward_route: ["printer"],
+               payload: "hello",
                return_route: []
              }
     end

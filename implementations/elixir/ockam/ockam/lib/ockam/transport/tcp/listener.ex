@@ -26,7 +26,7 @@ if Code.ensure_loaded?(:ranch) do
       transport = :ranch_tcp
       transport_options = [port: port]
       protocol = __MODULE__.Handler
-      protocol_options = []
+      protocol_options = [packet: 2]
 
       with {:ok, _apps} <- Application.ensure_all_started(:ranch),
            :ok <- start_listener(ref, transport, transport_options, protocol, protocol_options),
@@ -76,24 +76,14 @@ if Code.ensure_loaded?(:ranch) do
 
       with {:ok, destination, message} <- pick_destination_and_set_onward_route(message, state.address),
            {:ok, encoded_message} <- Wire.encode(@wire_encoder_decoder, message),
-           {:ok, encoded_message_with_length_prepended} <- prepend_varint_length(encoded_message),
-           :ok <- send_over_tcp(encoded_message_with_length_prepended, destination) do
+           :ok <- send_over_tcp(encoded_message, destination) do
         :ok
-      end
-    end
-
-    defp prepend_varint_length(message) do
-      bytesize = IO.iodata_length(message)
-      case Ockam.Wire.Binary.VarInt.encode(bytesize) do
-        {:error, reason} -> {:error, reason}
-        varint_length -> {:ok, [varint_length, message]}
       end
     end
 
     defp send_over_tcp(message, %{ip: ip, port: port}) do
       {:ok, pid} = Ockam.Transport.TCP.Client.start_link(%{ip: ip, port: port})
       Ockam.Transport.TCP.Client.send(pid, message)
-      :ok
     end
 
 
@@ -147,7 +137,7 @@ if Code.ensure_loaded?(:ranch) do
     @impl true
     def init([ref, transport, opts]) do
       {:ok, socket} = :ranch.handshake(ref, opts)
-      :ok = transport.setopts(socket, [{:active, true}, {:packet, 2}])
+      :ok = transport.setopts(socket, [{:active, true}])
 
       :gen_server.enter_loop(__MODULE__, [], %{
         socket: socket,
