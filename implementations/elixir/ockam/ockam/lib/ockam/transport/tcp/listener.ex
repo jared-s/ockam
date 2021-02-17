@@ -139,11 +139,18 @@ if Code.ensure_loaded?(:ranch) do
       {:ok, socket} = :ranch.handshake(ref, opts)
       :ok = transport.setopts(socket, [{:active, true}])
 
+      address = Ockam.Node.get_random_unregistered_address()
+
+
+      Ockam.Node.Registry.register_name(address, self())
+
       :gen_server.enter_loop(__MODULE__, [], %{
         socket: socket,
         transport: transport,
-        enqueued_data: []
-      })
+        address: address
+      },
+      {:via, Ockam.Node.process_registry(), address}
+      )
     end
 
     @impl true
