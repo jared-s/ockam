@@ -4,9 +4,7 @@ defmodule Ockam.Wire.Binary.V2 do
   @behaviour Ockam.Wire
 
   alias Ockam.Message
-  alias Ockam.Serializable
   alias Ockam.Wire.Binary.V2.Route
-  alias Ockam.Wire.Binary.VarInt
   alias Ockam.Wire.DecodeError
   alias Ockam.Wire.EncodeError
 
@@ -55,26 +53,6 @@ defmodule Ockam.Wire.Binary.V2 do
     end
   end
 
-  def encode_version do
-    case VarInt.encode(@version) do
-      {:error, error} -> {:error, error}
-      encoded -> {:ok, encoded}
-    end
-  end
-
-  def encode_payload(payload) do
-    case Serializable.impl_for(payload) do
-      nil ->
-        {:error, EncodeError.new({:payload_is_not_serializable, payload})}
-
-      _impl ->
-        case Serializable.serialize(payload) do
-          {:error, reason} -> {:error, EncodeError.new(reason)}
-          serialized -> {:ok, serialized}
-        end
-    end
-  end
-
   @doc """
   Decodes a message from a binary.
 
@@ -85,24 +63,15 @@ defmodule Ockam.Wire.Binary.V2 do
           {:ok, message :: Message.t()} | {:error, error :: DecodeError.t()}
 
   def decode(encoded) do
-    with {:ok, @version, rest} <- decode_version(encoded),
-         {:ok, onward_route, rest} <- Route.decode(rest),
-         {:ok, return_route, rest} <- Route.decode(rest) do
-      {:ok, %{onward_route: onward_route, return_route: return_route, payload: rest}}
-    end
-  end
-
-  defp decode_version(encoded) do
-    case VarInt.decode(encoded) do
-      {:error, error} ->
-        {:error, error}
-
-      {@version, rest} ->
-        {:ok, @version, rest}
-
-      {v, rest} ->
-        r = {:unexpected_version, [expected: @version, decoded: v, input: encoded, rest: rest]}
-        {:error, DecodeError.new(r)}
+    with {:ok, %{onward_route: onward_route, return_route: return_route} = decoded, _} <- :bare.decode(encoded, bare_spec(:message)),
+         {:ok, decoded_onward_route} <- Route.decode(onward_route),
+         {:ok, decoded_return_route} <- Route.decode(return_route) do
+      {:ok, Map.merge(decoded, %{
+        onward_route: decoded_onward_route,
+        return_route: decoded_return_route
+      })}
+      else
+        foo -> {:error, foo}
     end
   end
 
