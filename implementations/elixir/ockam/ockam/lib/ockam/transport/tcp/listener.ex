@@ -9,7 +9,7 @@ if Code.ensure_loaded?(:ranch) do
 
     @tcp 1
     # TODO: modify this for tcp
-    @wire_encoder_decoder Ockam.Wire.Binary.V1
+    @wire_encoder_decoder Ockam.Wire.Binary.V2
 
     @doc false
     @impl true
@@ -137,7 +137,7 @@ if Code.ensure_loaded?(:ranch) do
 
     use GenServer
 
-    @wire_encoder_decoder Ockam.Wire.Binary.V1
+    @wire_encoder_decoder Ockam.Wire.Binary.V2
 
     def start_link(ref, transport, opts) do
       pid = :proc_lib.spawn_link(__MODULE__, :init, [[ref, transport, opts]])
