@@ -5,7 +5,7 @@ defmodule Ockam.Wire.Binary.V2 do
 
   alias Ockam.Message
   alias Ockam.Serializable
-  alias Ockam.Wire.Binary.V1.Route
+  alias Ockam.Wire.Binary.V2.Route
   alias Ockam.Wire.Binary.VarInt
   alias Ockam.Wire.DecodeError
   alias Ockam.Wire.EncodeError
@@ -44,12 +44,14 @@ defmodule Ockam.Wire.Binary.V2 do
     return_route = Message.return_route(message)
     payload = Message.payload(message)
 
-    # :bare.encode(%{version: @version, onward_route: onward_route, return_route: return_route, payload: payload}, message_spec)
-    with {:ok, encoded_version} <- encode_version(),
-         {:ok, encoded_onward_route} <- Route.encode(onward_route),
-         {:ok, encoded_return_route} <- Route.encode(return_route),
-         {:ok, encoded_payload} <- encode_payload(payload) do
-      {:ok, [encoded_version, encoded_onward_route, encoded_return_route, encoded_payload]}
+    with {:ok, encoded_onward_route} <- Route.encode(onward_route),
+         {:ok, encoded_return_route} <- Route.encode(return_route) do
+      :bare.encode(%{
+        version: @version,
+        onward_route: encoded_onward_route,
+        return_route: encoded_return_route,
+        payload: payload
+        }, bare_spec(:message))
     end
   end
 

@@ -14,8 +14,7 @@ defmodule Ockam.Wire.Binary.V2.Route do
         {:error, error}
 
       encoded_addresses ->
-        number_of_addresses = length(route)
-        {:ok, [<<number_of_addresses::8>> | encoded_addresses]}
+        {:ok, encoded_addresses}
     end
   end
 
