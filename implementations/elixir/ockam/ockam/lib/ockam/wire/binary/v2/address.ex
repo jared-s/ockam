@@ -2,6 +2,8 @@ defmodule Ockam.Wire.Binary.V2.Address do
   @moduledoc false
 
   alias Ockam.Serializable
+  alias Ockam.Transport.TCPAddress
+  alias Ockam.Transport.UDPAddress
   alias Ockam.Wire.DecodeError
   alias Ockam.Wire.EncodeError
 
@@ -38,11 +40,12 @@ defmodule Ockam.Wire.Binary.V2.Address do
   def decode(%{type: type, value: value}) do
     # TODO: there needs to be a way to do this programmatically
     case type do
-      @tcp -> Ockam.Transport.TCPAddress.deserialize(value)
-      @udp -> Ockam.Transport.UDPAddress.deserialize(value)
+      @tcp -> TCPAddress.deserialize(value)
+      @udp -> UDPAddress.deserialize(value)
       0 -> value
     end
   end
+
   def decode(encoded) do
     reason = {:could_not_decode_address, encoded}
     {:error, DecodeError.new(reason)}

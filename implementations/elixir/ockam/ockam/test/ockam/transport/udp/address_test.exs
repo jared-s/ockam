@@ -1,8 +1,8 @@
 defmodule Ockam.Transport.UDPAddress.Tests do
   use ExUnit.Case, async: true
   doctest Ockam.Transport.UDPAddress
-  alias Ockam.Transport.UDPAddress
   alias Ockam.Address
+  alias Ockam.Transport.UDPAddress
 
   @udp 2
   @four_thousand_encoded <<160, 15>>
@@ -25,7 +25,9 @@ defmodule Ockam.Transport.UDPAddress.Tests do
 
     test "Serializing an address produces expected binary" do
       address = %UDPAddress{ip: {127, 0, 0, 1}, port: 4000}
-      assert %{type: @udp, value: <<0, 127, 0, 0, 1, 160, 15>>} == Ockam.Serializable.serialize(address)
+
+      assert %{type: @udp, value: <<0, 127, 0, 0, 1, 160, 15>>} ==
+               Ockam.Serializable.serialize(address)
     end
 
     test "Deserializing an address produces expected struct" do

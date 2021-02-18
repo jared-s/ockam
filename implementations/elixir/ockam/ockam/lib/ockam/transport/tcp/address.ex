@@ -23,9 +23,7 @@ defmodule Ockam.Transport.TCPAddress do
 
   def deserialize(value) when is_list(value), do: deserialize(IO.iodata_to_binary(value))
 
-  def deserialize(
-        <<@ipv4::8, a::8, b::8, c::8, d::8, port::unsigned-little-integer-16>>
-      ) do
+  def deserialize(<<@ipv4::8, a::8, b::8, c::8, d::8, port::unsigned-little-integer-16>>) do
     %TCPAddress{ip: {a, b, c, d}, port: port}
   end
 

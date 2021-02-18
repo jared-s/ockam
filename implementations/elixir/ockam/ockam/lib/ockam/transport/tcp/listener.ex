@@ -3,8 +3,10 @@ if Code.ensure_loaded?(:ranch) do
     @moduledoc false
 
     use Ockam.Worker
-    alias Ockam.Transport.TCPAddress
+
     alias Ockam.Message
+    alias Ockam.Transport.TCP.Client
+    alias Ockam.Transport.TCPAddress
     alias Ockam.Wire
 
     @tcp 1
@@ -83,10 +85,9 @@ if Code.ensure_loaded?(:ranch) do
     end
 
     defp send_over_tcp(message, %{ip: ip, port: port}) do
-      {:ok, pid} = Ockam.Transport.TCP.Client.start_link(%{ip: ip, port: port})
-      Ockam.Transport.TCP.Client.send(pid, message)
+      {:ok, pid} = Client.start_link(%{ip: ip, port: port})
+      Client.send(pid, message)
     end
-
 
     defp create_outgoing_message(message) do
       %{
@@ -145,30 +146,29 @@ if Code.ensure_loaded?(:ranch) do
 
       address = Ockam.Node.get_random_unregistered_address()
 
-
       Ockam.Node.Registry.register_name(address, self())
 
-      :gen_server.enter_loop(__MODULE__, [], %{
-        socket: socket,
-        transport: transport,
-        address: address
-      },
-      {:via, Ockam.Node.process_registry(), address}
+      :gen_server.enter_loop(
+        __MODULE__,
+        [],
+        %{
+          socket: socket,
+          transport: transport,
+          address: address
+        },
+        {:via, Ockam.Node.process_registry(), address}
       )
     end
 
     @impl true
     def handle_info({:tcp, socket, data}, %{socket: socket} = state) do
-      with {:ok, decoded} <- Ockam.Wire.decode(@wire_encoder_decoder, data) do
-        send_to_router(decoded)
-      else
-        {:error, %Ockam.Wire.DecodeError{} = e} ->
-          raise e
+      case Ockam.Wire.decode(@wire_encoder_decoder, data) do
+        {:ok, decoded} -> send_to_router(decoded)
+        {:error, %Ockam.Wire.DecodeError{} = e} -> raise e
       end
 
       {:noreply, state}
     end
-
 
     def handle_info({:tcp_closed, socket}, %{socket: socket, transport: transport} = state) do
       transport.close(socket)

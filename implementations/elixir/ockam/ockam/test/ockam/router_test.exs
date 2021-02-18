@@ -14,8 +14,10 @@ defmodule Ockam.Router.Tests do
   doctest Ockam.Router
 
   alias Ockam.Router.Tests.Printer
-  alias Ockam.Transport.UDPAddress
+  alias Ockam.Transport.TCP
   alias Ockam.Transport.TCPAddress
+  alias Ockam.Transport.UDP
+  alias Ockam.Transport.UDPAddress
 
   setup_all do
     {:ok, "printer"} = Printer.create(address: "printer")
@@ -32,26 +34,25 @@ defmodule Ockam.Router.Tests do
         ],
         payload: "hello"
       }
+
       :erlang.trace(printer, true, [:receive])
 
+      assert {:ok, _address_a} = UDP.create_listener(port: 3000, route_outgoing: true)
 
-
-      assert {:ok, _address_a} =
-               Ockam.Transport.UDP.create_listener(port: 3000, route_outgoing: true)
-      assert {:ok, _address_b} =
-               Ockam.Transport.UDP.create_listener(port: 4000)
+      assert {:ok, _address_b} = UDP.create_listener(port: 4000)
 
       Ockam.Router.route(message)
 
       assert_receive {:trace, ^printer, :receive, result}
+
       assert result == %{
-          version: 1,
-          onward_route: ["printer"],
-          payload: "hello",
-          return_route: [
-            %Ockam.Transport.UDPAddress{ip: {127, 0, 0, 1}, port: 3000}
-          ]
-        }
+               version: 1,
+               onward_route: ["printer"],
+               payload: "hello",
+               return_route: [
+                 %UDPAddress{ip: {127, 0, 0, 1}, port: 3000}
+               ]
+             }
     end
 
     test "Simple TCP Test", %{printer_pid: printer} do
@@ -66,15 +67,14 @@ defmodule Ockam.Router.Tests do
 
       :erlang.trace(printer, true, [:receive])
 
+      assert {:ok, _address_a} = TCP.create_listener(port: 3000, route_outgoing: true)
 
-      assert {:ok, _address_a} =
-               Ockam.Transport.TCP.create_listener(port: 3000, route_outgoing: true)
-      assert {:ok, _address_b} =
-               Ockam.Transport.TCP.create_listener(port: 4000)
+      assert {:ok, _address_b} = TCP.create_listener(port: 4000)
 
       Ockam.Router.route(message)
 
       assert_receive {:trace, ^printer, :receive, result}
+
       assert %{
                version: 1,
                onward_route: ["printer"],

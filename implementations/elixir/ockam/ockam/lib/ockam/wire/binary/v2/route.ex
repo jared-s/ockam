@@ -43,15 +43,17 @@ defmodule Ockam.Wire.Binary.V2.Route do
   """
   def decode(addresses) when is_list(addresses) and length(addresses) > 0 do
     # TODO: this is also kinda ugly
-    decoded = Enum.map(addresses, fn(address) ->
-      Address.decode(address)
-    end)
+    decoded =
+      Enum.map(addresses, fn address ->
+        Address.decode(address)
+      end)
+
     if length(decoded) == length(addresses) do
       {:ok, decoded}
     else
       # should return an actual error instead of only successful routes.
       r = {:an_address_failed_to_encode, [decoded: decoded, input: addresses]}
-      {:error, Ockam.Wire.DecodeError.new(r)}
+      {:error, DecodeError.new(r)}
     end
   end
 

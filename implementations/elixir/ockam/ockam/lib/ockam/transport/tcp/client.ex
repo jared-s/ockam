@@ -1,4 +1,5 @@
 defmodule Ockam.Transport.TCP.Client do
+  @moduledoc false
   use GenServer
 
   @impl true
@@ -30,7 +31,6 @@ defmodule Ockam.Transport.TCP.Client do
 
   def handle_info({:tcp_closed, _}, state), do: {:stop, :normal, state}
   def handle_info({:tcp_error, _}, state), do: {:stop, :normal, state}
-
 
   @impl true
   def handle_call({:send, data}, _from, %{socket: socket} = state) do

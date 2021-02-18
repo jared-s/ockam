@@ -23,7 +23,13 @@ defmodule Ockam.Wire.Binary.V2 do
   end
 
   def bare_spec(:message) do
-    {:struct, [version: :uint, onward_route: bare_spec(:route), return_route: bare_spec(:route), payload: :data]}
+    {:struct,
+     [
+       version: :uint,
+       onward_route: bare_spec(:route),
+       return_route: bare_spec(:route),
+       payload: :data
+     ]}
   end
 
   @doc """
@@ -42,8 +48,17 @@ defmodule Ockam.Wire.Binary.V2 do
 
     with {:ok, encoded_onward_route} <- Route.encode(onward_route),
          {:ok, encoded_return_route} <- Route.encode(return_route),
-         encoded <- :bare.encode(%{version: @version, onward_route: encoded_onward_route, return_route: encoded_return_route, payload: payload}, bare_spec(:message)) do
-          {:ok, encoded}
+         encoded <-
+           :bare.encode(
+             %{
+               version: @version,
+               onward_route: encoded_onward_route,
+               return_route: encoded_return_route,
+               payload: payload
+             },
+             bare_spec(:message)
+           ) do
+      {:ok, encoded}
     end
   end
 
@@ -57,15 +72,17 @@ defmodule Ockam.Wire.Binary.V2 do
           {:ok, message :: Message.t()} | {:error, error :: DecodeError.t()}
 
   def decode(encoded) do
-    with {:ok, %{onward_route: onward_route, return_route: return_route} = decoded, _} <- :bare.decode(encoded, bare_spec(:message)),
+    with {:ok, %{onward_route: onward_route, return_route: return_route} = decoded, _} <-
+           :bare.decode(encoded, bare_spec(:message)),
          {:ok, decoded_onward_route} <- Route.decode(onward_route),
          {:ok, decoded_return_route} <- Route.decode(return_route) do
-      {:ok, Map.merge(decoded, %{
-        onward_route: decoded_onward_route,
-        return_route: decoded_return_route
-      })}
-      else
-        foo -> {:error, foo}
+      {:ok,
+       Map.merge(decoded, %{
+         onward_route: decoded_onward_route,
+         return_route: decoded_return_route
+       })}
+    else
+      foo -> {:error, foo}
     end
   end
 
