@@ -10,10 +10,12 @@ defmodule Ockam.Transport.TCP.Client do
     {:ok, Map.put(state, :socket, socket)}
   end
 
+  @spec start_link(map) :: :ignore | {:error, any} | {:ok, pid}
   def start_link(default) when is_map(default) do
     GenServer.start_link(__MODULE__, default)
   end
 
+  @impl true
   def handle_info(:connect, %{ip: ip, port: port} = state) do
     {:ok, socket} = :gen_tcp.connect(ip, port, [:binary, :inet, {:active, true}, {:packet, 2}])
     :inet.setopts(socket, [{:packet, 2}])
@@ -21,7 +23,7 @@ defmodule Ockam.Transport.TCP.Client do
 
     {:noreply, Map.put(state, :socket, socket)}
   end
-  @impl true
+
   def handle_info({:tcp, _socket, _data}, state) do
     {:noreply, state}
   end
@@ -35,6 +37,7 @@ defmodule Ockam.Transport.TCP.Client do
     {:reply, :gen_tcp.send(socket, data), state}
   end
 
+  @spec send(atom | pid | {atom, any} | {:via, atom, any}, any) :: any
   def send(pid, data) do
     GenServer.call(pid, {:send, data})
   end

@@ -8,6 +8,7 @@ defmodule Ockam.Wire.Binary.V1.Address do
   require DecodeError
   require EncodeError
 
+  @spec encode(any) :: binary | maybe_improper_list() | {:error, Ockam.Wire.EncodeError.t()}
   def encode({_address_type, address}) when is_binary(address) do
     address
   end
@@ -30,6 +31,7 @@ defmodule Ockam.Wire.Binary.V1.Address do
     end
   end
 
+  @spec decode(any) :: {:error | {byte, <<_::16, _::_*8>>}, binary | Ockam.Wire.DecodeError.t()}
   def decode(<<address_type::unsigned-integer-8, length::8, encoded::binary>>) do
     case encoded do
       <<value::binary-size(length), rest::binary>> ->

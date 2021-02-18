@@ -49,6 +49,7 @@ defimpl Ockam.Serializable, for: Ockam.Transport.UDPAddress do
   @ipv4 0
   @ipv6 1
 
+
   def serialize(%UDPAddress{ip: ip, port: port}) do
     with {:ok, serialized_ip} <- serialize_ip(ip),
          {:ok, serialized_port} <- serialize_port(port) do

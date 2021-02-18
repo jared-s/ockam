@@ -12,6 +12,7 @@ defmodule Ockam.Wire.Binary.V2.Address do
   @tcp 1
   @udp 2
 
+  @spec encode(any) :: binary | maybe_improper_list() | {:error, Ockam.Wire.EncodeError.t()}
   def encode({_address_type, address}) when is_binary(address) do
     address
   end

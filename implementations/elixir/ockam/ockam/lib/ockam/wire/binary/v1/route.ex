@@ -8,6 +8,7 @@ defmodule Ockam.Wire.Binary.V1.Route do
   require DecodeError
   require EncodeError
 
+  @spec encode(any) :: {:error, Ockam.Wire.EncodeError.t()} | {:ok, [...]}
   def encode(route) when is_list(route) do
     case encode_addresses(route, []) do
       {:error, error} ->
@@ -24,6 +25,7 @@ defmodule Ockam.Wire.Binary.V1.Route do
     {:error, EncodeError.new(reason)}
   end
 
+  @spec encode_addresses(maybe_improper_list, any) :: list | {:error, Ockam.Wire.EncodeError.t()}
   def encode_addresses([], encoded), do: Enum.reverse(encoded)
 
   def encode_addresses([address | remaining_route], encoded) do
