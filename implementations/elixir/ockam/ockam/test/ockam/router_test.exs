@@ -60,6 +60,7 @@ defmodule Ockam.Router.Tests do
           %TCPAddress{ip: {127, 0, 0, 1}, port: 4000},
           "printer"
         ],
+        return_route: [],
         payload: "hello"
       }
 
@@ -74,12 +75,12 @@ defmodule Ockam.Router.Tests do
       Ockam.Router.route(message)
 
       assert_receive {:trace, ^printer, :receive, result}
-      assert result == %{
+      assert %{
                version: 1,
                onward_route: ["printer"],
                payload: "hello",
-               return_route: []
-             }
+               return_route: [_address]
+             } = result
     end
   end
 end

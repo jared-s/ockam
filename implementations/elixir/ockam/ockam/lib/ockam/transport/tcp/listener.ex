@@ -71,10 +71,11 @@ if Code.ensure_loaded?(:ranch) do
       {:ok, state}
     end
 
-    defp encode_and_send_over_tcp(message, state) do
+    defp encode_and_send_over_tcp(message, %{address: address}) do
       message = create_outgoing_message(message)
 
-      with {:ok, destination, message} <- pick_destination_and_set_onward_route(message, state.address),
+      with {:ok, destination, message} <- pick_destination_and_set_onward_route(message, address),
+           {:ok, message} <- set_return_route(message, address),
            {:ok, encoded_message} <- Wire.encode(@wire_encoder_decoder, message),
            :ok <- send_over_tcp(encoded_message, destination) do
         :ok
@@ -90,7 +91,8 @@ if Code.ensure_loaded?(:ranch) do
     defp create_outgoing_message(message) do
       %{
         onward_route: Message.onward_route(message),
-        payload: Message.payload(message)
+        payload: Message.payload(message),
+        return_route: Message.return_route(message)
       }
     end
 
@@ -116,7 +118,9 @@ if Code.ensure_loaded?(:ranch) do
       end
     end
 
-
+    defp set_return_route(%{return_route: return_route} = message, address) do
+      {:ok, %{message | return_route: [address | return_route]}}
+    end
 
     defp default_ip, do: {127, 0, 0, 1}
     defp default_port, do: 4000
