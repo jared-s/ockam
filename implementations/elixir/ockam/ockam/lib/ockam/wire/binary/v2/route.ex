@@ -50,7 +50,8 @@ defmodule Ockam.Wire.Binary.V2.Route do
       {:ok, decoded}
     else
       # should return an actual error instead of only successful routes.
-      {:error, decoded}
+      r = {:an_address_failed_to_encode, [decoded: decoded, input: addresses]}
+      {:error, Ockam.Wire.DecodeError.new(r)}
     end
   end
 

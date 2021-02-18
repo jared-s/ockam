@@ -162,9 +162,8 @@ if Code.ensure_loaded?(:ranch) do
       with {:ok, decoded} <- Ockam.Wire.decode(@wire_encoder_decoder, data) do
         send_to_router(decoded)
       else
-        {:error, %Ockam.Wire.DecodeError{} = _e} ->
-          # how did we get a full length packet that is not decodable? close the connection.
-          raise "Apparently I can't raise a DecodeError and we should fix that before merging this code"
+        {:error, %Ockam.Wire.DecodeError{} = e} ->
+          raise e
       end
 
       {:noreply, state}
