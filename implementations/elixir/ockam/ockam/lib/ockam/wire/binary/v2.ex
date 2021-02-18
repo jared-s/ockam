@@ -13,9 +13,7 @@ defmodule Ockam.Wire.Binary.V2 do
 
   @version 1
 
-  # TODO: I hate bare_spec/1 thing but let's make it work first
-  # because I don't want to break V1 or spend a bunch of time
-  # hunting for the right solution yet.
+  # TODO: refactor this.
   def bare_spec(:address) do
     {:struct, [type: :uint, value: :data]}
   end
