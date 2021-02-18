@@ -141,7 +141,7 @@ if Code.ensure_loaded?(:ranch) do
     @impl true
     def init([ref, transport, opts]) do
       {:ok, socket} = :ranch.handshake(ref, opts)
-      :ok = transport.setopts(socket, [{:active, true}])
+      :ok = :inet.setopts(socket, [{:active, true}, {:packet, 2}])
 
       address = Ockam.Node.get_random_unregistered_address()
 
@@ -169,6 +169,7 @@ if Code.ensure_loaded?(:ranch) do
 
       {:noreply, state}
     end
+
 
     def handle_info({:tcp_closed, socket}, %{socket: socket, transport: transport} = state) do
       transport.close(socket)
