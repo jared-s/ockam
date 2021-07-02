@@ -14,18 +14,15 @@ and trustfully with cloud services and other devices.
 """
 
 [features]
-default = ["std", "software_vault", "noise_xx"]
+default = ["std", "noise_xx"]
 noise_xx = ["ockam_key_exchange_xx"]
-software_vault = ["ockam_vault", "ockam_vault_sync_core", "ockam_vault_sync_core/software_vault"]
 std = []
 
 [dependencies]
 ockam_core = { path = "../ockam_core", version = "0.18.0-dev"            }
 ockam_node = {path = "../ockam_node", version = "0.16.0-dev"           }
-ockam_vault_core = { path = "../ockam_vault_core", version = "0.12.0-dev"            }
-ockam_vault_sync_core = {path = "../ockam_vault_sync_core", version = "0.9.0-dev"           , optional = true}
-ockam_vault = {path = "../ockam_vault", version = "0.12.0-dev"           , optional = true}
-ockam_channel = {path = "../ockam_channel", version = "0.13.0-dev"           }
+ockam_vault = {path = "../ockam_vault", version = "0.12.0-dev"         }
+ockam_channel = {path = "../ockam_channel", version = "0.13.0-dev"          }
 ockam_key_exchange_xx = { path = "../ockam_key_exchange_xx", version = "0.10.0-dev"           , optional = true}
 async-trait = "0.1.42"
 bls12_381_plus = "0.5"
@@ -44,6 +41,4 @@ tracing = "0.1"
 
 [dev-dependencies]
 ockam_transport_tcp = { path = "../ockam_transport_tcp"}
-ockam_vault = { path = "../ockam_vault", version = "0.12.0-dev"            }
-ockam_vault_sync_core = { path = "../ockam_vault_sync_core", version = "0.9.0-dev"            }
 rand_xorshift = "0"
